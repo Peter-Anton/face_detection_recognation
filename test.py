@@ -2,8 +2,8 @@ from tensorflow.keras.models import load_model
 import cv2
 import numpy as np# Get the file paths
 
-pb_files = "opencv_face_detector_uint8.pb"
-pbtxt_files = "opencv_face_detector.pbtxt"
+pb_files = "/Users/peteranton/Desktop/peter/deep learning/lab6/opencv_face_detector_uint8.pb"
+pbtxt_files = "/Users/peteranton/Desktop/peter/deep learning/lab6/opencv_face_detector.pbtxt"
 
 # Function to perform face detection on a static photo
 def detect_faces(net, frame):
@@ -42,7 +42,7 @@ person_names = ['Alex Lawther', 'Logan Lerman', 'Maria Pedraza', 'Anthony Mackie
                        'Danielle Panabaker', 'Keanu Reeves', 'Johnny Depp', 'Miley Cyrus', 'Rami Malek', 'Rihanna', 'Lili Reinhart']
 
 if "__main__" == __name__:
-    loaded_model = load_model('my_mode2.h5')
+    loaded_model = load_model('face_rec_acc_plus.h5')
     net = cv2.dnn.readNetFromTensorflow(pb_files, pbtxt_files)
     cap = cv2.VideoCapture(0)
     while True:
