@@ -2,52 +2,7 @@ from tensorflow.keras.models import load_model
 import cv2
 import numpy as np
 from scipy.spatial.distance import cosine
-from PIL import Image, ImageDraw
-import os
-import tqdm
-def image_gen():
-    output_dir = "generated_images"
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-        image_size=(160,160)
-        num_images = 70000
-    for i in range(num_images):
-        # Create a blank image with a white background
-        image = Image.new("RGB", image_size, "white")
-        
-        # Create a drawing object
-        draw = ImageDraw.Draw(image)
-        
-        # Randomize parameters for shape generation
-        shape = np.random.choice(['rectangle', 'circle', 'triangle'])
-        color = tuple(np.random.randint(0, 256, size=3))
-        position = tuple(np.random.randint(0, size - 50) for size in image_size)
-        size = np.random.randint(20, 80)
-        
-        # Draw a shape on the image
-        if shape == 'rectangle':
-            end_position = (position[0] + size, position[1] + size)
-            draw.rectangle([position, end_position], fill=color)
-        elif shape == 'circle':
-            end_position = (position[0] + size, position[1] + size)
-            draw.ellipse([position, end_position], fill=color)
-        elif shape == 'triangle':
-            points = [
-                (position[0] + size // 2, position[1]),
-                (position[0], position[1] + size),
-                (position[0] + size, position[1] + size)
-            ]
-            draw.polygon(points, fill=color)
-        
-        # Save the image
-        image_path = os.path.join(output_dir, f"image_{i}.png")
-        image.save(image_path)
-
-        if i % 1000 == 0:
-            print(f"Generated {i}/{num_images} images")
-
-    print("Image generation completed!")
-
+from tensorflow.keras.models import load_model
 
 
 # Load your pre-trained model for feature extraction
@@ -73,19 +28,7 @@ person_names = ['Alex Lawther', 'Logan Lerman', 'Maria Pedraza', 'Anthony Mackie
                      'Brie Larson', 'Rebecca Ferguson', 'Maisie Williams', 'Millie Bobby Brown', 'Lionel Messi', 'Gal Gadot', 'Margot Robbie', 'Katharine Mcphee',
                        'Danielle Panabaker', 'Keanu Reeves', 'Johnny Depp', 'Miley Cyrus', 'Rami Malek', 'Rihanna', 'Lili Reinhart']
 
-
-# create image
-image_gen()
-#preprocess image and ransform to numpy array
-non_defined_features = []
-for i in tqdm.tqdm(range(70000)):
-    image = Image.open(f"generated_images/image_{i}.png")
-    image = image.resize((160, 160))
-    image = np.array(image) / 255.0
-    image = image.reshape(1, 160, 160, 3)
-    non_defined_features.append(loaded_model.predict(image)[0])
-non_defined_features.save('non_defined_features.npy')    
-
+non_defined_features = np.load('non_defined_features.npy')
 
 def detect_and_recognize_faces(net, frame, model, non_defined_features):
     blob = cv2.dnn.blobFromImage(frame, 1.0, (300, 300), [104., 177., 123.], False, False)
@@ -110,7 +53,7 @@ def detect_and_recognize_faces(net, frame, model, non_defined_features):
             highest_prob = Y_pred[0][highest_prob_index]
             
             # If highest probability is below threshold, classify as 'no class'
-            if highest_prob < 0.4:
+            if highest_prob < 0.3:
                 person = "no class"
             else:
                 # Calculate cosine similarity with non-classified faces
@@ -118,28 +61,30 @@ def detect_and_recognize_faces(net, frame, model, non_defined_features):
                 similarities = [1 - cosine(features, non_defined_features[i]) for i in range(len(non_defined_features))]
                 
                 # Define a threshold for classification
-                threshold = 0.9
+                threshold = 0.3
                 
                 # If any similarity exceeds threshold, classify as one of the known classes
                 if max(similarities) > threshold:
                     highest_prob_index = np.argmax(similarities)
                     person = person_names[highest_prob_index]
+                    print("smilarity",max(similarities))
+                    print("person",person)
                 else:
                     person = "no class"
+                    print(max(similarities))
 
             cv2.putText(frame, person, (startX, startY), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
             cv2.rectangle(frame, (startX, startY), (endX, endY), (255, 0, 0), 3)
 
-    return frame
+    return frame,cropped_frame
 
 if __name__ == "__main__":
     cap = cv2.VideoCapture(0)
-    
+
     while True:
         try:
             ret, frame = cap.read()
-            frame = detect_and_recognize_faces(net, frame, loaded_model, non_defined_features)
-            
+            frame,cropped_frame = detect_and_recognize_faces(net, frame, loaded_model, non_defined_features)
             cv2.imshow("frame", frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
