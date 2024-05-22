@@ -14,10 +14,14 @@ This repository contains code for face detection and recognition using OpenCV's 
     ```bash
     
         pip install opencv-python opencv-python-headless
-4. Run test2.py to start face detection and recognition using your webcam:
+
+4. run the face detection and recognation.ipynb
+
+5. Run test2.py to start face detection and recognition using your webcam and the .h5 file that you save:
 
       ```bash
 
    python test2.py
+# here is an image to test the mode:      
 
 ![Alt text](https://github.com/Peter-Anton/face_detection_recognation/blob/master/Screenshot%202024-05-12%20at%2011.57.01%E2%80%AFPM.png)
