@@ -1,2 +1,6 @@
 *.h5
-non_class_data
+*.npy
+test1.py
+test3.py
+cos_sim.ipynb
+gen.ipynb
